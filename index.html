@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 심리 & 운세 센터</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            /* 뉴진스.jpeg 배경 (인물이 잘 보이도록 오버레이 투명도를 낮춤) */
+            background-image: linear-gradient(rgba(20, 15, 10, 0.4), rgba(30, 22, 15, 0.5)), url('뉴진스.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass-card {
+            /* 카드를 더 투명하게 만들어 뒤의 인물들이 비치도록 수정 */
+            background: rgba(255, 252, 248, 0.65);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        /* 투명한 카드 위에서도 글자가 잘 읽히도록 미세한 텍스트 그림자 추가 */
+        .text-shadow {
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="text-stone-900 min-h-screen py-12 px-4 flex items-center justify-center">
+
+    <div class="max-w-3xl w-full glass-card border border-white/40 rounded-3xl shadow-2xl p-6 md:p-12 relative overflow-hidden">
+        
+        <!-- 클래식 데코레이션 블러 원 -->
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-stone-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- 상단 타이틀 -->
+        <header class="text-center mb-8 relative z-10">
+            <span class="inline-block px-4 py-1.5 mb-3 text-xs font-semibold tracking-wider text-amber-900 uppercase bg-amber-100/90 rounded-full border border-amber-300/40 animate-float shadow-sm">
+                ✨ 클래식 감성 AI 멀티 서비스
+            </span>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-stone-900 tracking-tight mb-3 text-shadow">
+                어떤 분석을 원하시나요?
+            </h1>
+            <p class="text-stone-700 text-sm md:text-base font-semibold text-shadow">
+                원하시는 카테고리를 선택하여 깊이 있는 AI 분석을 받아보세요.
+            </p>
+        </header>
+
+        <!-- 카테고리 탭 버튼 영역 -->
+        <div class="flex justify-center gap-4 mb-10 relative z-10">
+            <button type="button" id="tabMbtiBtn" onclick="switchTab('mbti')" 
+                class="flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-lg bg-gradient-to-r from-stone-900 to-amber-950 text-amber-50 shadow-stone-900/30">
+                🧠 MBTI 성격 검사
+            </button>
+            <button type="button" id="tabFortuneBtn" onclick="switchTab('fortune')" 
+                class="flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-sm bg-white/80 text-stone-700 hover:bg-white border border-stone-300">
+                🔮 오늘의 운세
+            </button>
+        </div>
+
+        <!-- 공통 API 키 설정 영역 -->
+        <div class="mb-8 p-5 bg-white/70 rounded-2xl border border-stone-200/80 shadow-sm relative z-10">
+            <label for="apiKey" class="block text-xs font-bold tracking-wider text-amber-950 uppercase mb-1.5">Gemini API Key (공통 설정)</label>
+            <input type="password" id="apiKey" placeholder="AI 분석을 위한 API 키를 입력하세요" 
+                class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-800 text-sm bg-white text-stone-900 placeholder-stone-400 transition">
+            <p class="text-xs text-amber-900/80 mt-1.5 font-medium">
+                🔒 입력한 API 키는 브라우저 외부로 절대 유출되지 않습니다.
+            </p>
+        </div>
+
+        <!-- [카테고리 1] MBTI 성격 검사 폼 영역 -->
+        <div id="mbtiSection" class="relative z-10">
+            <form id="mbtiForm" class="space-y-8">
+                <!-- E vs I -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-stone-300/80 pb-3">
+                        <span class="bg-stone-900 text-amber-50 font-bold px-3 py-1 rounded-lg text-xs tracking-wider shadow-sm">E / I</span>
+                        <h2 class="text-lg font-bold text-stone-900">에너지 방향성</h2>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="EI">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">1. 사람들과 어울리는 성향</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q1" value="E" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">처음 보는 사람들과도 쉽게 이야기하거나 친해지는 편이다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q1" value="I" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">친한 사람이나 친구가 없는 모임에 가면 매우 불편한 편이다.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="EI">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">2. 모임에서의 행동</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q2" value="E" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">모르는 사람들이 많은 곳에서도 비교적 활발하게 행동한다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q2" value="I" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">친구를 쉽게 사귀는 편이 아니며 친한 몇 명의 친구들과 지낸다.</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- S vs N -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-stone-300/80 pb-3">
+                        <span class="bg-amber-900 text-amber-50 font-bold px-3 py-1 rounded-lg text-xs tracking-wider shadow-sm">S / N</span>
+                        <h2 class="text-lg font-bold text-stone-900">인식 기능 (정보 수집)</h2>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="SN">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">3. 표현과 상상력 선호도</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q3" value="S" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">추상적 표현보다 '흰구름'처럼 단순한 사실 표현이 더 좋다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q3" value="N" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">상상 속의 이야기를 잘 만들어 내는 편이다.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="SN">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">4. 기억과 특징</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q4" value="S" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">주변 사람들의 얼굴이나 세부적인 특징들을 잘 기억한다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q4" value="N" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">종종 물건을 잃어버리거나 어디에 두었는지 깜빡하곤 한다.</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- T vs F -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-stone-300/80 pb-3">
+                        <span class="bg-stone-800 text-amber-50 font-bold px-3 py-1 rounded-lg text-xs tracking-wider shadow-sm">T / F</span>
+                        <h2 class="text-lg font-bold text-stone-900">판단 기능 (결정 방식)</h2>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="TF">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">5. 호기심과 성향</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q5" value="T" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">평소 사물이나 현상에 대해 '왜'라는 질문을 자주 던진다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q5" value="F" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">주위의 조언이나 타인의 기대에 부응하는 편이다.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="TF">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">6. 의지와 공감</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q6" value="T" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">목표를 향해 끝까지 밀고 나가는 끈기와 의지가 강하다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q6" value="F" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">감수성이 풍부하고 인정이 많다는 소리를 자주 듣는다.</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- J vs P -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-stone-300/80 pb-3">
+                        <span class="bg-amber-950 text-amber-50 font-bold px-3 py-1 rounded-lg text-xs tracking-wider shadow-sm">J / P</span>
+                        <h2 class="text-lg font-bold text-stone-900">생활 양식 (구조화)</h2>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="JP">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">7. 계획성과 일 처리</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q7" value="J" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">할 일을 미리미리 끝내놓아야 마음이 편하다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q7" value="P" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">마지막 순간에 닥쳐서 집중해 처리하는 편이다.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/60 hover:bg-white/90 rounded-2xl border border-stone-200 shadow-sm transition question-group" data-dimension="JP">
+                        <p class="font-semibold text-stone-900 mb-3 text-sm md:text-base">8. 규칙과 즉흥성</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q8" value="J" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">체계적인 스케줄에 맞춰 생활하는 것을 선호한다.</span>
+                            </label>
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-200/80 hover:border-amber-800 hover:bg-amber-50/60 cursor-pointer transition group">
+                                <input type="radio" name="q8" value="P" class="mt-1 text-amber-900 focus:ring-amber-800">
+                                <span class="text-sm text-stone-800 group-hover:text-stone-950 font-medium transition">상황에 따라 유연하게 즉흥적으로 대처하는 편이다.</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="pt-6 text-center">
+                    <button type="button" id="analyzeMbtiBtn" 
+                        class="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 hover:opacity-95 text-amber-50 font-bold rounded-2xl shadow-xl transition-all transform active:scale-95 text-base tracking-wider">
+                        ⚡ MBTI 성격 분석하기
+                    </button>
+                </div>
+            </form>
+
+            <!-- MBTI 결과 출력 영역 -->
+            <div id="mbtiResultSection" class="hidden mt-10 p-6 md:p-8 bg-white/90 rounded-3xl border border-stone-300 shadow-2xl space-y-6">
+                <div class="text-center">
+                    <span class="text-xs font-bold text-amber-900 uppercase tracking-widest bg-amber-100 px-3 py-1 rounded-full">MBTI Result</span>
+                    <h3 class="text-2xl font-black text-stone-900 mt-2">🎉 나의 성격 분석 결과</h3>
+                </div>
+                <div class="bg-gradient-to-br from-stone-900 to-amber-950 text-amber-50 p-8 rounded-2xl shadow-inner text-center relative overflow-hidden">
+                    <div id="calculatedMbti" class="text-5xl md:text-6xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-stone-200 to-amber-200">----</div>
+                </div>
+                <div id="aiMbtiContent" class="text-stone-800 space-y-4 leading-relaxed text-sm md:text-base p-2 font-medium"></div>
+            </div>
+        </div>
+
+        <!-- [카테고리 2] 오늘의 운세 폼 영역 (기본 숨김) -->
+        <div id="fortuneSection" class="hidden relative z-10 space-y-6">
+            <div class="space-y-4 bg-white/60 p-6 rounded-2xl border border-stone-200 shadow-sm">
+                <div>
+                    <label for="fortuneName" class="block text-xs font-bold tracking-wider text-amber-950 uppercase mb-1.5">이름</label>
+                    <input type="text" id="fortuneName" placeholder="이름을 입력하세요" 
+                        class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-800 text-sm bg-white text-stone-900 transition">
+                </div>
+                <div>
+                    <label for="fortuneBirth" class="block text-xs font-bold tracking-wider text-amber-950 uppercase mb-1.5">생년월일</label>
+                    <input type="date" id="fortuneBirth" 
+                        class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-800 text-sm bg-white text-stone-900 transition">
+                </div>
+            </div>
+
+            <div class="pt-2 text-center">
+                <button type="button" id="analyzeFortuneBtn" 
+                    class="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 hover:opacity-95 text-amber-50 font-bold rounded-2xl shadow-xl transition-all transform active:scale-95 text-base tracking-wider">
+                    🔮 오늘의 운세 분석하기
+                </button>
+            </div>
+
+            <!-- 운세 결과 출력 영역 -->
+            <div id="fortuneResultSection" class="hidden mt-10 p-6 md:p-8 bg-white/90 rounded-3xl border border-stone-300 shadow-2xl space-y-6">
+                <div class="text-center">
+                    <span class="text-xs font-bold text-amber-900 uppercase tracking-widest bg-amber-100 px-3 py-1 rounded-full">Daily Fortune</span>
+                    <h3 id="fortuneResultTitle" class="text-2xl font-black text-stone-900 mt-2">✨ 오늘의 운세 결과</h3>
+                </div>
+                <div id="aiFortuneContent" class="text-stone-800 space-y-4 leading-relaxed text-sm md:text-base p-2 font-medium"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        function switchTab(type) {
+            const mbtiSec = document.getElementById('mbtiSection');
+            const fortuneSec = document.getElementById('fortuneSection');
+            const mbtiBtn = document.getElementById('tabMbtiBtn');
+            const fortuneBtn = document.getElementById('tabFortuneBtn');
+
+            if (type === 'mbti') {
+                mbtiSec.classList.remove('hidden');
+                fortuneSec.classList.add('hidden');
+                
+                mbtiBtn.className = "flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-lg bg-gradient-to-r from-stone-900 to-amber-950 text-amber-50 shadow-stone-900/30";
+                fortuneBtn.className = "flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-sm bg-white/80 text-stone-700 hover:bg-white border border-stone-300";
+            } else {
+                mbtiSec.classList.add('hidden');
+                fortuneSec.classList.remove('hidden');
+                
+                fortuneBtn.className = "flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-lg bg-gradient-to-r from-amber-950 to-stone-900 text-amber-50 shadow-stone-900/30";
+                mbtiBtn.className = "flex-1 max-w-xs py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wider transition-all shadow-sm bg-white/80 text-stone-700 hover:bg-white border border-stone-300";
+            }
+        }
+
+        // 1. MBTI 분석 실행
+        document.getElementById('analyzeMbtiBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) {
+                alert('공통 설정의 Gemini API 키를 입력해주세요!');
+                document.getElementById('apiKey').focus();
+                return;
+            }
+
+            const answers = { EI: {E: 0, I: 0}, SN: {S: 0, N: 0}, TF: {T: 0, F: 0}, JP: {J: 0, P: 0} };
+            const questionGroups = document.querySelectorAll('.question-group');
+            let allAnswered = true;
+
+            questionGroups.forEach((group) => {
+                const dimension = group.dataset.dimension;
+                const selected = group.querySelector('input[type="radio"]:checked');
+                if (!selected) {
+                    allAnswered = false;
+                } else {
+                    answers[dimension][selected.value]++;
+                }
+            });
+
+            if (!allAnswered) {
+                alert('모든 MBTI 문항에 답변해주세요!');
+                return;
+            }
+
+            const mbti = 
+                (answers.EI.E >= answers.EI.I ? 'E' : 'I') +
+                (answers.SN.S >= answers.SN.N ? 'S' : 'N') +
+                (answers.TF.T >= answers.TF.F ? 'T' : 'F') +
+                (answers.JP.J >= answers.JP.P ? 'J' : 'P');
+
+            document.getElementById('calculatedMbti').textContent = mbti;
+            
+            const resultSection = document.getElementById('mbtiResultSection');
+            const aiContent = document.getElementById('aiMbtiContent');
+            
+            resultSection.classList.remove('hidden');
+            aiContent.innerHTML = '<div class="text-center py-10 text-amber-950 font-semibold animate-pulse flex flex-col items-center justify-center gap-3">제미나이(Gemini 3 Flash)가 성격을 클래식한 감성으로 분석 중입니다...</div>';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const prompt = `사용자의 MBTI 검사 결과가 '${mbti}'로 나왔습니다. 이 성격 유형에 대해 따뜻하고 감각적인 어조로 장점, 특징, 그리고 추천하는 활동 방향을 보기 좋은 HTML 태그(<br>, <b> 등)를 사용해 상세히 설명해주세요.`;
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content) {
+                    aiContent.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                } else {
+                    aiContent.innerHTML = '분석 결과를 불러오는 데 실패했습니다. API 키를 확인해주세요.';
+                }
+            } catch (error) {
+                console.error(error);
+                aiContent.innerHTML = '오류가 발생했습니다.';
+            }
+        });
+
+        // 2. 오늘의 운세 분석 실행
+        document.getElementById('analyzeFortuneBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const userName = document.getElementById('fortuneName').value.trim();
+            const userBirth = document.getElementById('fortuneBirth').value;
+
+            if (!apiKey) {
+                alert('공통 설정의 Gemini API 키를 입력해주세요!');
+                document.getElementById('apiKey').focus();
+                return;
+            }
+            if (!userName) {
+                alert('이름을 입력해주세요!');
+                document.getElementById('fortuneName').focus();
+                return;
+            }
+            if (!userBirth) {
+                alert('생년월일을 입력해주세요!');
+                document.getElementById('fortuneBirth').focus();
+                return;
+            }
+
+            const resultSection = document.getElementById('fortuneResultSection');
+            const aiFortuneContent = document.getElementById('aiFortuneContent');
+            document.getElementById('fortuneResultTitle').textContent = `${userName}님의 오늘의 운세 결과`;
+
+            resultSection.classList.remove('hidden');
+            aiFortuneContent.innerHTML = '<div class="text-center py-10 text-amber-950 font-semibold animate-pulse flex flex-col items-center justify-center gap-3">제미나이(Gemini 3 Flash)가 오늘의 운세를 정성껏 분석 중입니다...</div>';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const prompt = `사용자 이름은 '${userName}'이고 생년월일은 '${userBirth}'입니다. 이 정보를 바탕으로 오늘 하루의 운세를 따뜻하고 세련된 어조로 상세히 분석해주세요. 내용에는 오늘 하루 총운, 연애운/대인관계운, 금전/학업(일)운, 그리고 행운의 컬러, 아이템, 조언을 포함하여 보기 좋은 HTML 태그(<br>, <b> 등)를 사용해 구성해주세요.`;
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content) {
+                    aiFortuneContent.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                } else {
+                    aiFortuneContent.innerHTML = '운세 결과를 불러오는 데 실패했습니다. API 키를 확인해주세요.';
+                }
+            } catch (error) {
+                console.error(error);
+                aiFortuneContent.innerHTML = '오류가 발생했습니다.';
+            }
+        });
+    </script>
+</body>
+</html>
